@@ -4,9 +4,9 @@ from rest_framework import serializers
 
 class RegisterSerzializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
-    email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
     confirmed_password = serializers.CharField(write_only=True, min_length=8)
+    email = serializers.EmailField()
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -23,11 +23,11 @@ class RegisterSerzializer(serializers.Serializer):
             raise serializers.ValidationError({"confirmed_password": "Passwords do not match."})
         return data
 
-    def create(self, validated_data):
-        validated_data.pop('confirmed_password')
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
-        return user
+    # def create(self, validated_data):
+    #     validated_data.pop('confirmed_password')
+    #     user = User.objects.create_user(
+    #         username=validated_data['username'],
+    #         email=validated_data['email'],
+    #         password=validated_data['password']
+    #     )
+    #     return user
