@@ -62,7 +62,7 @@ class LoginView(generics.GenericAPIView):
 
             token, created = Token.objects.get_or_create(user=user)
 
-            refresh = RefreshToken.for_user(user)
+            refresh = RefreshToken.for_user(user) #production secure=True setzen
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
