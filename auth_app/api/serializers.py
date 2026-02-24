@@ -23,11 +23,7 @@ class RegisterSerzializer(serializers.Serializer):
             raise serializers.ValidationError({"confirmed_password": "Passwords do not match."})
         return data
 
-    # def create(self, validated_data):
-    #     validated_data.pop('confirmed_password')
-    #     user = User.objects.create_user(
-    #         username=validated_data['username'],
-    #         email=validated_data['email'],
-    #         password=validated_data['password']
-    #     )
-    #     return user
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True, min_length=8)
