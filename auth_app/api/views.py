@@ -5,6 +5,7 @@ from rest_framework import status, generics, serializers
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from auth_app.api.serializers import LoginSerializer, RegisterSerzializer
 
@@ -60,6 +61,32 @@ class LoginView(generics.GenericAPIView):
                 return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
             token, created = Token.objects.get_or_create(user=user)
+
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            response = Response(response_data, status=200)
+
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite='Lax',
+                max_age=15 * 60
+            )
+
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,
+                samesite='Lax',
+                max_age=7 * 24 * 60 * 60
+            )
+
+            return response
             response_data = {
                 "detail": "Login successfully!",
                 "user": {
@@ -79,10 +106,13 @@ class LoginView(generics.GenericAPIView):
 
 
 
+# Logout
 
 
-
-
+# response = Response({"detail": "Logged out"})
+# response.delete_cookie('access_token')
+# response.delete_cookie('refresh_token')
+# return response
 
 
 
