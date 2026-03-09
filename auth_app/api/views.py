@@ -1,10 +1,13 @@
+import token
+
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 from rest_framework import status, generics, serializers
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from auth_app.api.serializers import LoginSerializer, RegisterSerzializer
@@ -66,7 +69,16 @@ class LoginView(generics.GenericAPIView):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
-            response = Response(response_data, status=200)
+            response_data = {
+                "detail": "Login successfully!",
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email
+                }
+            }
+
+            response = Response(response_data, status=status.HTTP_200_OK)
 
             response.set_cookie(
                 key='access_token',
@@ -87,15 +99,6 @@ class LoginView(generics.GenericAPIView):
             )
 
             return response
-            response_data = {
-                "detail": "Login successfully!",
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email
-                }
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": f"An internal server occurred.{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -103,36 +106,29 @@ class LoginView(generics.GenericAPIView):
 
 
 
+class LogoutView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request, *args, **kwargs):
+        refresh = request.COOKIES.get("refresh_token")
 
-
-# Logout
-
-
-# response = Response({"detail": "Logged out"})
-# response.delete_cookie('access_token')
-# response.delete_cookie('refresh_token')
-# return response
-
-
-
-
-
-
-
-
-
-
-
-
-# class LoginView(ModelViewSet):
-#     print("LoginView called")
-#     pass
-
-
-# class LogoutView(ModelViewSet):
-#     print("LogoutView called")
-#     pass
+        if not refresh:
+            response = Response({"error": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
+        try:
+            token = RefreshToken(refresh)
+            token.blacklist()
+        except TokenError:
+            pass
+        except Exception as e:
+            return Response({"error": f"An internal server occurred.{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        response = Response({"detail": "Log-Out successfully! All Tokens will be deleted. Refresh token is now invalid."}, status=status.HTTP_200_OK)
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        return response
 
 
 # class TokenRefreshView(ModelViewSet):
