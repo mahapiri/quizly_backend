@@ -10,6 +10,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from auth_app.api.permissions import HasValidRefreshToken
 from auth_app.api.serializers import LoginSerializer, RegisterSerzializer
 
 
@@ -131,6 +132,26 @@ class LogoutView(generics.GenericAPIView):
         return response
 
 
-# class TokenRefreshView(ModelViewSet):
-#     print("TokenRefreshView called")
-#     pass
+class TokenRefreshView(generics.GenericAPIView):
+    permission_classes = [HasValidRefreshToken]
+
+    def post(self, request, *args, **kwargs):
+        try: 
+            refresh = request.validated_refresh_token
+            access_token = str(refresh.access_token)
+
+            response = Response(
+                {"detail": "Token refreshed"},
+                status=status.HTTP_200_OK
+            )
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+                max_age=15 * 60
+            )
+            return response
+        except Exception as e:
+            return Response({"error": f"An internal server occurred.{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
