@@ -16,7 +16,7 @@ from auth_app.api.serializers import LoginSerializer, RegisterSerzializer
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerzializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny] 
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
